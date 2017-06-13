@@ -6,6 +6,7 @@ from sys import stderr
 # third party modules
 import ast
 import six
+import copy
 from ete3 import PhyloTree, Tree, NCBITaxa
 from symbols import SYMBOL
 
@@ -235,6 +236,15 @@ class TreePattern(Tree):
     def set_controller(self):
         controller = {}
 
+        # update controller in case of root or leaf metacharacters
+        if SYMBOL["is_root"] in self.name: 
+            controller["root"] = True
+            self.name = self.name.split(SYMBOL["is_root"])[0]
+        if SYMBOL["is_leaf"] in self.name:
+            controller["leaf"] = True
+            self.name = self.name.split(SYMBOL["is_leaf"])[0]
+
+        # update controller in case of repeat metecharacters
         if self.name == SYMBOL["one_or_more"]: 
             controller["allow_indirect_connection"] = True
             controller["direct_connection_first"] = False
@@ -350,24 +360,32 @@ class TreePattern(Tree):
         constraint_scope = {attr_name: getattr(self.syntax, attr_name)
                             for attr_name in dir(self.syntax)}
         constraint_scope.update({"__target_node": target_node})
+        constraints = []
+
+        if "root" in self.controller and self.controller["root"]: constraints.append("__target_node.is_root()")
+        if "leaf" in self.controller and self.controller["leaf"]: constraints.append("__target_node.is_leaf()")
 
         if not self.name:
             # empty pattern node should match any target node
-            constraint = ''
+            constraints.append('')
         elif '@' in self.name:
             # converts references to node itself
-            constraint = self.name.replace('@', '__target_node')
+            constraints.append(self.name.replace('@', '__target_node'))
 
         elif self.controller["allow_indirect_connection"]:
             # pattern nodes that allow indirect connection should match any target node
-            constraint = ''
+            constraints.append('')
         else:
             # if no references to itself, let's assume we search an exact name
             # match (allows using regular newick string as patterns)
-            constraint = '__target_node.name == "%s"' % self.name
+            constraints.append('__target_node.name == "%s"' % self.name)
 
         try:
-            st = eval(constraint, constraint_scope) if constraint else True
+            st = True
+            for constraint in constraints:
+                if constraint: 
+                    st &= eval(constraint, constraint_scope)
+                else: st &= True
 
         except ValueError:
             raise ValueError("not a boolean result: . Check quoted_node_names.")
@@ -383,7 +401,11 @@ class TreePattern(Tree):
                                     for attr_name in dir(root_syntax)}
                 constraint_scope.update({"__target_node": target_node})
 
-                st = eval(constraint, constraint_scope) if constraint else True
+                st = True
+                for constraint in constraints:
+                    if constraint: 
+                        st &= eval(constraint, constraint_scope)
+                    else: st &= True
                 return st
             except NameError as err:
                 raise NameError('Constraint evaluation failed at %s: %s' %
@@ -405,15 +427,20 @@ class TreePattern(Tree):
 
         """
 
+        # the controller is for only one use. It changes the node names.
+        # for that reason a deepcopy of the pattern and not the pattern 
+        # is traversed
+        one_use_pattern = copy.deepcopy(self)
+
         # sets the controller for every node.
         # should chagne if only is a metacharacter acording to benchmarking tests.
-        for node in self.traverse():
+        for node in one_use_pattern.traverse():
             node.set_controller()
 
         num_hits = 0
         for node in tree.traverse(target_traversal):
             #print("\n\n checking node {}".format(node.name))
-            if self.match(node, cache):
+            if one_use_pattern.match(node, cache):
                 num_hits += 1
                 yield node
             #else:
@@ -481,15 +508,6 @@ def test():
             if list(pattern.find_match(tree, maxhits=None)):
                 pattern_match += [tree_num+1]
         print(pattern_match == true_match[p_num])
-
-
-    print "\n"
-    p6 = TreePattern(""" ((c)*)a ;""", quoted_node_names=False)
-
-    trees = [t1,t2,t3,t4,t5,t11]
-
-    for i in range(0,len(trees)):
-        print "tree" + str(i + 1)  + ": " + str(len(list(p6.find_match(trees[i]))) > 0)
 
 
 if __name__ == '__main__':
