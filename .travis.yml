@@ -13,5 +13,5 @@ install:
   - pip install https://github.com/etetoolkit/ete/archive/feature/quotednames.zip
 
 script:
-  - python tests/unittests/test_treematcher.py
-  - python tests/unittests/functionality_test.py
+  - python test_treematcher.py
+  - python functionality_test.py
