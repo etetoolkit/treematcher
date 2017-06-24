@@ -295,7 +295,7 @@ class TreePattern(Tree):
             controller["direct_connection_first"] = True
         elif self.name == SYMBOL["zero_or_one"]:
             controller["direct_connection_first"] = True
-            controller["indirect_connection"] = True
+            controller["allow_indirect_connection"] = True
             controller["high"] = 1
         elif '{' in self.name:
             split = self.name.split('{')
