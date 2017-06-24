@@ -232,15 +232,19 @@ class TreePattern(Tree):
 
         # check the tree syntax.
 
-    def is_in_bounds(self):
+    def is_in_bounds(self, bound):
         """
         Checks in case of indirect connection the current node is inside the bounds.
+        :param bound: specifies what bound to test
         """
-        in_bounds = self.controller["skipped"] >= self.controller["low"]
-        if self.controller["high"] > 0:
-            # high bound has to be less but not equal, because it performs a 'can skip one more' test.
-            in_bounds &= self.controller["skipped"] < self.controller["high"]
-        return in_bounds
+
+        if bound == 'low':
+            return self.controller["skipped"] >= self.controller["low"]
+        elif bound == 'high':
+            if self.controller["high"] >= 0:
+                # high bound has to be less but not equal, because it performs a 'can skip one more' test.
+                return self.controller["skipped"] < self.controller["high"]
+        return True
 
     def decode_repeat_symbol(self, bounds):
         """
@@ -259,7 +263,7 @@ class TreePattern(Tree):
             low = high = int(bounds)
         return [low, high]
 
-    
+
     def set_controller(self):
         """
         Creates a dictionary that contains information about a node.
@@ -275,7 +279,7 @@ class TreePattern(Tree):
         controller["skipped"] = 0
 
         # update controller in case of root or leaf metacharacters and set the node name
-        if SYMBOL["is_root"] in self.name: 
+        if SYMBOL["is_root"] in self.name:
             controller["root"] = True
             self.name = self.name.split(SYMBOL["is_root"])[0]
         if SYMBOL["is_leaf"] in self.name:
@@ -300,9 +304,9 @@ class TreePattern(Tree):
             controller["low"] = bounds[0]
             controller["high"] = bounds[1]
             controller["allow_indirect_connection"] = True
-            if controller["low"]  == 0: controller["direct_connection_first"] = True 
+            if controller["low"]  == 0: controller["direct_connection_first"] = True
             else: controller["direct_connection_first"] = False
-        else: 
+        else:
             controller["allow_indirect_connection"] = False
             controller["direct_connection_first"] = False
 
@@ -331,13 +335,13 @@ class TreePattern(Tree):
         status = self.is_local_match(node, cache)
 
         if not status:
-            if self.up is not None and self.up.controller["allow_indirect_connection"] and self.up.is_in_bounds():  # skip node by resetting pattern
+            if self.up is not None and self.up.controller["allow_indirect_connection"] and self.up.is_in_bounds("high"):  # skip node by resetting pattern
                 status = True
                 self = self.up
                 self.controller["skipped"] += 1
         elif self.controller["allow_indirect_connection"] and self.controller["skipped"] == 0:
             self.controller["skipped"] += 1
-       
+
 
         # if so, continues evaluating children pattern nodes against target node
         # children
@@ -381,7 +385,10 @@ class TreePattern(Tree):
 
                             for i in range(len(self.children)):
                                 st = self.children[i].match(candidate[i], cache)
-                                if st == False and self.controller["allow_indirect_connection"] and len(candidate[i].children) > 0 and self.is_in_bounds():
+                                if st and not self.is_in_bounds("low"):
+                                    # in case it matches, but has exited the lower bound (in case it exist), force False the match
+                                    st = False
+                                if st == False and self.controller["allow_indirect_connection"] and len(candidate[i].children) > 0:
                                     pass
 
                                 else:
@@ -396,7 +403,8 @@ class TreePattern(Tree):
                     if status and sub_status_count > 0:
                         break
 
-        if self.controller["allow_indirect_connection"]: self.controller["skipped"] -= 1
+        # 'skipped' tracks the maximum skipped node. So only in case of not match, it decreases
+        if not status and self.controller["allow_indirect_connection"]: self.controller["skipped"] -= 1
         return status
 
 
@@ -439,7 +447,7 @@ class TreePattern(Tree):
         try:
             st = True
             for constraint in constraints:
-                if constraint: 
+                if constraint:
                     st &= eval(constraint, constraint_scope)
                 else: st &= True
 
@@ -459,7 +467,7 @@ class TreePattern(Tree):
 
                 st = True
                 for constraint in constraints:
-                    if constraint: 
+                    if constraint:
                         st &= eval(constraint, constraint_scope)
                     else: st &= True
                 return st
@@ -484,7 +492,7 @@ class TreePattern(Tree):
         """
 
         # the controller is for only one use, because it changes the node names.
-        # for that reason a deepcopy of the pattern and not the pattern 
+        # for that reason a deepcopy of the pattern and not the pattern
         # is traversed. Very slow operation.
         one_use_pattern = copy.deepcopy(self)
 
