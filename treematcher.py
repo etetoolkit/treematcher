@@ -427,6 +427,11 @@ class TreePattern(Tree):
         if "root" in self.controller and self.controller["root"]: constraints.append("__target_node.is_root()")
         if "leaf" in self.controller and self.controller["leaf"]: constraints.append("__target_node.is_leaf()")
 
+        if SYMBOL["any_child"] in self.name:
+            self.name = " any( " + self.name.split("[")[0] + " " + ("[" + self.name.split("[")[1]).replace(SYMBOL["any_child"], "x") + " for x in __target_node.children)"
+            print self.name
+
+
         if not self.name:
             # empty pattern node should match any target node
             constraints.append('')
@@ -435,10 +440,10 @@ class TreePattern(Tree):
             # converts references to node itself if it's in an expression.
             if len(self.name) == 1: constraints.append('')
             else: constraints.append(self.name.replace('@', '__target_node'))
-
         elif self.controller["allow_indirect_connection"]:
             # pattern nodes that allow indirect connection should match any target node
             constraints.append('')
+
         else:
             # if no references to itself, let's assume we search an exact name
             # match (allows using regular newick string as patterns)
