@@ -429,7 +429,9 @@ class TreePattern(Tree):
 
         if SYMBOL["any_child"] in self.name:
             self.name = " any( " + self.name.split("[")[0] + " " + ("[" + self.name.split("[")[1]).replace(SYMBOL["any_child"], "x") + " for x in __target_node.children)"
-            print self.name
+        elif SYMBOL["all_children"] in self.name:
+            self.name = " all( " + self.name.split("[")[0] + " " + ("[" + self.name.split("[")[1]).replace(SYMBOL["any_child"], "x") + " for x in __target_node.children)"
+
 
 
         if not self.name:
