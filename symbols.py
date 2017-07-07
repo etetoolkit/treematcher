@@ -5,5 +5,8 @@ SYMBOL = {
 	'is_leaf': '$',
 	'zero_or_more': '*',
 	'one_or_more': '+',
-	'zero_or_one': '?'
+	'zero_or_one': '?',
+#	'all_children': '[:children:]',
+	'any_child': '[:any_child:]',
+	'all_nodes': '[:all_nodes:]'
 }
