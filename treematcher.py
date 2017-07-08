@@ -286,6 +286,13 @@ class TreePattern(Tree):
             controller["leaf"] = True
             self.name = self.name.split(SYMBOL["is_leaf"])[0]
 
+        # transform sets to the corresponding code
+        if SYMBOL["any_child"] in self.name:
+            self.name = " any( " + self.name.split("[")[0] + " " + ("[" + self.name.split("[")[1]).replace(SYMBOL["any_child"], "x") + " for x in __target_node.children)"
+        elif SYMBOL["children"] in self.name:
+            self.name = " all( " + self.name.split("[")[0] + " " + ("[" + self.name.split("[")[1]).replace(SYMBOL["children"], "x") + " for x in __target_node.children)"
+
+
         # update controller according to metacharacter connection properties.
         if self.name == SYMBOL["one_or_more"]:
             controller["allow_indirect_connection"] = True
@@ -426,12 +433,6 @@ class TreePattern(Tree):
 
         if "root" in self.controller and self.controller["root"]: constraints.append("__target_node.is_root()")
         if "leaf" in self.controller and self.controller["leaf"]: constraints.append("__target_node.is_leaf()")
-
-        if SYMBOL["any_child"] in self.name:
-            self.name = " any( " + self.name.split("[")[0] + " " + ("[" + self.name.split("[")[1]).replace(SYMBOL["any_child"], "x") + " for x in __target_node.children)"
-        elif SYMBOL["all_children"] in self.name:
-            self.name = " all( " + self.name.split("[")[0] + " " + ("[" + self.name.split("[")[1]).replace(SYMBOL["any_child"], "x") + " for x in __target_node.children)"
-
 
 
         if not self.name:
