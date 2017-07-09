@@ -283,12 +283,30 @@ class TreePattern(Tree):
 
             try:
                 st = eval(constraint, constraint_scope)
-            except:
-                print sys.exc_info()[0]
-                return None
-            if st:
-                correct_node = node
 
+            except ValueError:
+                raise ValueError("not a boolean result: . Check quoted_node_names.")
+
+            except (AttributeError, IndexError) as err:
+                raise ValueError('Constraint evaluation failed at %s: %s' %
+                                 (target_node, err))
+            except NameError:
+                try:
+                    # temporary fix. Can not access custom syntax on all nodes. Get it from the root node.
+                    root_syntax = self.get_tree_root().syntax
+                    constraint_scope = {attr_name: getattr(root_syntax, attr_name)
+                                        for attr_name in dir(root_syntax)}
+                    constraint_scope.update({"__target_node": node})
+                    constraint_scope.update({"__correct_node": correct_node})
+
+                    st = eval(constraint, constraint_scope)
+                    if st: correct_node = node
+
+                except NameError as err:
+                    raise NameError('Constraint evaluation failed at %s: %s' %
+                             (target_node, err))
+            else:
+                if st: correct_node = node
         return correct_node
 
     def decode_repeat_symbol(self, bounds):
