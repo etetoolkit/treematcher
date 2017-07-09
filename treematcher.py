@@ -1,7 +1,7 @@
 #system modules
 import re
 from itertools import permutations
-from sys import stderr
+import sys
 
 # third party modules
 import ast
@@ -246,6 +246,55 @@ class TreePattern(Tree):
                 return self.controller["skipped"] < self.controller["high"]
         return True
 
+    def compare_tree_nodes(self, match_list):
+        """
+        Given a single match pattern and a list of (matched) nodes
+        returns the one that fulfills the constrint
+
+        :param match_list: a list of (matched) nodes
+
+        returns a node
+        """
+
+        print self.name + " called with a list: " + str(len(match_list))
+
+        # find the node in self that has the comparison expression.
+        for node in self.traverse():
+            if node.controller["single_match"]:
+                pattern = node
+                constraint = pattern.controller["single_match_contstraint"]
+
+        print "constraint: " + constraint
+
+        # for all nodes in the matched pattern find the one that fits the best
+        # the constraint expression.
+        # assumes that the root has to be tested.
+        correct_node = match_list[0]
+
+        st = False
+
+        for node in match_list:
+            constraint = pattern.controller["single_match_contstraint"]
+            constraint_scope = {attr_name: getattr(self.syntax, attr_name)
+                                for attr_name in dir(self.syntax)}
+            constraint_scope.update({"__target_node": node})
+            constraint_scope.update({"__correct_node": correct_node})
+            constraint = constraint.replace("@", "__target_node")
+            constraint = constraint.replace(SYMBOL["all_nodes"], "__correct_node")
+
+            try:
+                st = eval(constraint, constraint_scope)
+            except:
+                print "error"
+                print sys.exc_info()[0]
+                return None
+            if st:
+                correct_node = node
+
+        return correct_node
+
+
+
     def decode_repeat_symbol(self, bounds):
         """
         Extracts valuable information from the controlled skipping case.
@@ -263,7 +312,6 @@ class TreePattern(Tree):
             low = high = int(bounds)
         return [low, high]
 
-
     def set_controller(self):
         """
         Creates a dictionary that contains information about a node.
@@ -277,6 +325,7 @@ class TreePattern(Tree):
         controller["low"] = 0
         controller["high"] = -1
         controller["skipped"] = 0
+        controller["single_match"] = False
 
         # update controller in case of root or leaf metacharacters and set the node name
         if SYMBOL["is_root"] in self.name:
@@ -289,9 +338,12 @@ class TreePattern(Tree):
         # transform sets to the corresponding code
         if SYMBOL["any_child"] in self.name:
             self.name = " any( " + self.name.split("[")[0] + " " + ("[" + self.name.split("[")[1]).replace(SYMBOL["any_child"], "x") + " for x in __target_node.children)"
-        elif SYMBOL["children"] in self.name:
+        if SYMBOL["children"] in self.name:
             self.name = " all( " + self.name.split("[")[0] + " " + ("[" + self.name.split("[")[1]).replace(SYMBOL["children"], "x") + " for x in __target_node.children)"
-
+        if SYMBOL["all_nodes"] in self.name:
+            controller["single_match"] = True
+            controller["single_match_contstraint"] = self.name
+            self.name = '@'
 
         # update controller according to metacharacter connection properties.
         if self.name == SYMBOL["one_or_more"]:
@@ -318,6 +370,7 @@ class TreePattern(Tree):
             controller["direct_connection_first"] = False
 
         self.controller = controller
+        return self.controller["single_match"]
 
     # FUNCTIONS EXPOSED TO USERS START HERE
     def match(self, node, cache=None):
@@ -415,8 +468,7 @@ class TreePattern(Tree):
         return status
 
 
-
-    def is_local_match(self, target_node, cache):
+    def is_local_match(self, target_node, cache, mode="normal"):
         """ Evaluate if this pattern constraint node matches a target tree node.
 
         TODO: args doc here...
@@ -504,18 +556,34 @@ class TreePattern(Tree):
         # is traversed. Very slow operation.
         one_use_pattern = copy.deepcopy(self)
 
+        # indicaes whether the pattern is a pattern of single match
+        # such as maximum or minimum value of an attribute
+        single_match_pattern = False
+
         # sets the controller for every node.
         # should chagne if only is a metacharacter acording to benchmarking tests.
+        # if one node indicates single_match, the whole pattern is single_match.
+        # no functionality to support other than pattern's root single_match yet
         for node in one_use_pattern.traverse():
-            node.set_controller()
+            single_match_pattern |= node.set_controller()
 
-        num_hits = 0
-        for node in tree.traverse(target_traversal):
-            if one_use_pattern.match(node, cache):
-                num_hits += 1
-                yield node
-            if maxhits is not None and num_hits >= maxhits:
-                break
+        # in case of single_match pattern save the nodes and filter them
+        # in other case find the requested match
+        if single_match_pattern:
+            print "single match"
+            matched_nodes = []
+            for node in tree.traverse(target_traversal):
+                if one_use_pattern.match(node, cache):
+                    matched_nodes += [node]
+            yield one_use_pattern.compare_tree_nodes(matched_nodes)
+        else:
+            num_hits = 0
+            for node in tree.traverse(target_traversal):
+                if one_use_pattern.match(node, cache):
+                    num_hits += 1
+                    yield node
+                if maxhits is not None and num_hits >= maxhits:
+                    break
 
 
 def test():
