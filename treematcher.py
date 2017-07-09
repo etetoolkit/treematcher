@@ -1,7 +1,6 @@
 #system modules
 import re
 from itertools import permutations
-import sys
 
 # third party modules
 import ast
@@ -246,34 +245,34 @@ class TreePattern(Tree):
                 return self.controller["skipped"] < self.controller["high"]
         return True
 
-    def compare_tree_nodes(self, match_list):
+    def find_extreme_case(self, match_list):
         """
         Given a single match pattern and a list of (matched) nodes
-        returns the one that fulfills the constrint
+        returns the one that fulfills the constraint. That constraint should
+        describe an axtreme condition such as minimum or maxhimum.
 
         :param match_list: a list of (matched) nodes
-
-        returns a node
         """
 
-        print self.name + " called with a list: " + str(len(match_list))
-
         # find the node in self that has the comparison expression.
+        # now is useless. In case this comparison can be made inside other
+        # patterns, the every pattern should compare their corresponding node of
+        # the other patterns.
         for node in self.traverse():
             if node.controller["single_match"]:
                 pattern = node
                 constraint = pattern.controller["single_match_contstraint"]
-
-        print "constraint: " + constraint
 
         # for all nodes in the matched pattern find the one that fits the best
         # the constraint expression.
         # assumes that the root has to be tested.
         correct_node = match_list[0]
 
-        st = False
+        st = False # truth flag for eval()
 
         for node in match_list:
+            # for every node in the list compare the best match so far with
+            # the current node in the list priority.
             constraint = pattern.controller["single_match_contstraint"]
             constraint_scope = {attr_name: getattr(self.syntax, attr_name)
                                 for attr_name in dir(self.syntax)}
@@ -285,15 +284,12 @@ class TreePattern(Tree):
             try:
                 st = eval(constraint, constraint_scope)
             except:
-                print "error"
                 print sys.exc_info()[0]
                 return None
             if st:
                 correct_node = node
 
         return correct_node
-
-
 
     def decode_repeat_symbol(self, bounds):
         """
@@ -468,7 +464,7 @@ class TreePattern(Tree):
         return status
 
 
-    def is_local_match(self, target_node, cache, mode="normal"):
+    def is_local_match(self, target_node, cache):
         """ Evaluate if this pattern constraint node matches a target tree node.
 
         TODO: args doc here...
@@ -570,12 +566,11 @@ class TreePattern(Tree):
         # in case of single_match pattern save the nodes and filter them
         # in other case find the requested match
         if single_match_pattern:
-            print "single match"
             matched_nodes = []
             for node in tree.traverse(target_traversal):
                 if one_use_pattern.match(node, cache):
                     matched_nodes += [node]
-            yield one_use_pattern.compare_tree_nodes(matched_nodes)
+            yield one_use_pattern.find_extreme_case(matched_nodes)
         else:
             num_hits = 0
             for node in tree.traverse(target_traversal):
