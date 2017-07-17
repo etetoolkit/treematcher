@@ -59,13 +59,7 @@ p = TreePattern("((A,A2,A3){2}, (C,D));")
 for m in p.find_match(t):
     print m
 
-# this is an interesting behaviour.
-# zero_intermediate_nodes case behaviours as connection.
-# one_or_more case the pattern node takes takes place in tree topology.
-# When number id defined the  pattern first behaves as zero_intermediate_nodes
-# if 0 is in the range and then as one_or_more and count the skipped.
-# So in this example the {2} node is one node far from root of (C,D).
-# skipping mechanism should be updated.
+
 
 print "Example 8"
 # works as expected, should be a test case
