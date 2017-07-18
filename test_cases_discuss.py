@@ -8,9 +8,9 @@ print "Example 1"
 p = TreePattern("(A,A2);")
 for m in p.find_match(t):
     print m
-# This happens because When the TreePattern is created, an anonymous root is added.
-# and it's avaluated as match.
-# https://github.com/etetoolkit/treematcher/blob/master/treematcher.py#L430
+# This rewuires the `not` feature to be False. Else since both pattern tips
+# where found, it's ok.
+# `not` feauture is not implemented yet. Problems with implementation.
 
 
 print "Example 2"
@@ -55,7 +55,9 @@ for m in p.find_match(t):
 
 print "Example 7"
 # Expected a match, but none is reported
-p = TreePattern("((A,A2,A3){2}, (C,D));")
+#p = TreePattern("((A,A2,A3){2}, (C,D));")
+# second approach
+p = TreePattern("(((A,A2,A3)@){1}, (C,D));")
 for m in p.find_match(t):
     print m
 
@@ -63,6 +65,8 @@ for m in p.find_match(t):
 
 print "Example 8"
 # works as expected, should be a test case
-p = TreePattern("((A,A2,A3){1}, B);")
+#p = TreePattern("((A,A2,A3){1}, B);")
+# second approach
+p = TreePattern("(((A,A2,A3)@){0}, B);")
 for m in p.find_match(t):
     print m
