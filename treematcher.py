@@ -12,6 +12,9 @@ from symbols import SYMBOL, SET
 # internal modules
 #...
 
+#developement modules
+from sys import exit
+
 
 class TreePatternCache(object):
     def __init__(self, tree):
@@ -317,7 +320,7 @@ class TreePattern(Tree):
 
         returns a list with the lower and the highest bounds in respectively order.
         """
-        bounds = bounds[0:len(bounds)-1]
+        bounds = bounds[1:len(bounds)-1]
         if '-' in bounds:
             split = bounds.split("-")
             low = int(split[0]) if split[0] else 0
@@ -325,6 +328,31 @@ class TreePattern(Tree):
         else:
             low = high = int(bounds)
         return [low, high]
+
+    def parse_metacharacters(self):
+        """
+        Takes a string as node name and extracts the metacharacters.
+        Assumes that all metacharacters are defined at the end of the string.
+        returns a list containing all metacharacters in the string.
+        """
+        metacharacters = []
+
+        while len(self.name) > 0 and  self.name[len(self.name)-1] in SYMBOL.values():
+
+            if SYMBOL["defined_number_set_start"] in self.name:
+                metacharacters += [
+                self.name [
+                self.name.find(SYMBOL["defined_number_set_start"]):self.name.find(SYMBOL["defined_number_set_end"]) + 1
+                ]]
+                self.name = self.name[0:self.name.find(SYMBOL["defined_number_set_start"])]
+            else:
+                metacharacters += [ self.name[len(self.name) - 1] ]
+
+                if len(self.name) > 0:
+                    self.name = self.name[0:len(self.name)-1]
+
+        return metacharacters
+
 
     def set_controller(self):
         """
@@ -335,19 +363,46 @@ class TreePattern(Tree):
         """
         controller = {}
 
-        # bounds and (already) skipped nodes values
+        metacharacters = []
+        if len(self.name) > 0:
+            metacharacters = self.parse_metacharacters()
+
+        # bounds, (already) skipped nodes values and connection properties.
         controller["low"] = 0
         controller["high"] = -1
         controller["skipped"] = 0
         controller["single_match"] = False
+        controller["allow_indirect_connection"] = False
+        controller["direct_connection_first"] = False
 
-        # update controller in case of root or leaf metacharacters and set the node name
-        if SYMBOL["is_root"] in self.name:
-            controller["root"] = True
-            self.name = self.name.split(SYMBOL["is_root"])[0]
-        if SYMBOL["is_leaf"] in self.name:
-            controller["leaf"] = True
-            self.name = self.name.split(SYMBOL["is_leaf"])[0]
+
+        for metacharacter in metacharacters:
+
+            # update controller in case of root or leaf metacharacters and set the node name
+            if metacharacter == SYMBOL["is_root"]:
+                controller["root"] = True
+            if metacharacter == SYMBOL["is_leaf"]:
+                controller["leaf"] = True
+
+            # update controller according to metacharacter connection properties.
+            if metacharacter == SYMBOL["one_or_more"]:
+                controller["allow_indirect_connection"] = True
+                controller["direct_connection_first"] = False
+            elif metacharacter == SYMBOL["zero_or_more"]:
+                controller["allow_indirect_connection"] = True
+                controller["direct_connection_first"] = True
+            elif metacharacter == SYMBOL["zero_or_one"]:
+                controller["direct_connection_first"] = True
+                controller["allow_indirect_connection"] = True
+                controller["high"] = 1
+            elif SYMBOL["defined_number_set_start"] in metacharacter:
+                split = self.name.split(SYMBOL["defined_number_set_start"])
+                bounds = self.decode_repeat_symbol(metacharacter)
+                controller["low"] = bounds[0]
+                controller["high"] = bounds[1]
+                controller["allow_indirect_connection"] = True
+                if controller["low"]  == 0: controller["direct_connection_first"] = True
+                else: controller["direct_connection_first"] = False
 
         # transform sets to the corresponding code
         if SET["any_child"] in self.name:
@@ -358,30 +413,6 @@ class TreePattern(Tree):
             controller["single_match"] = True
             controller["single_match_contstraint"] = self.name
             self.name = '@'
-
-        # update controller according to metacharacter connection properties.
-        if self.name == SYMBOL["one_or_more"]:
-            controller["allow_indirect_connection"] = True
-            controller["direct_connection_first"] = False
-        elif self.name == SYMBOL["zero_or_more"]:
-            controller["allow_indirect_connection"] = True
-            controller["direct_connection_first"] = True
-        elif self.name == SYMBOL["zero_or_one"]:
-            controller["direct_connection_first"] = True
-            controller["allow_indirect_connection"] = True
-            controller["high"] = 1
-        elif SYMBOL["defined_number_set_start"] in self.name:
-            split = self.name.split(SYMBOL["defined_number_set_start"])
-            self.name = split[0]
-            bounds = self.decode_repeat_symbol(split[1])
-            controller["low"] = bounds[0]
-            controller["high"] = bounds[1]
-            controller["allow_indirect_connection"] = True
-            if controller["low"]  == 0: controller["direct_connection_first"] = True
-            else: controller["direct_connection_first"] = False
-        else:
-            controller["allow_indirect_connection"] = False
-            controller["direct_connection_first"] = False
 
         self.controller = controller
         return self.controller["single_match"]
@@ -601,6 +632,10 @@ class TreePattern(Tree):
 
 def test():
     print "compiled. run /test/test_metacharacters.py and /test/test_logical_comparison.py to test."
+    t3 = PhyloTree(""" ((d,c)b)a ; """, format=8, quoted_node_names=False)
+    pattern1 = TreePattern(""" ((c)+)a ;""", quoted_node_names=False)
+
+    print len(list(pattern1.find_match(t3))) > 0
 
 
 if __name__ == '__main__':
