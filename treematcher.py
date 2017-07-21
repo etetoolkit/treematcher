@@ -600,64 +600,7 @@ class TreePattern(Tree):
 
 
 def test():
-    '''
-        The + represents one or more nodes.
-    '''
-
-    # should not match any pattern
-    t1 = PhyloTree(""" ((c,g)a) ; """, format=8, quoted_node_names=False)
-
-    # should not match any pattern
-    # does not match pattern 1 because there must be at least one node between a and (c,d)
-    t2 = PhyloTree(""" ((c,d)a) ; """, format=8, quoted_node_names=False)
-
-    # should match patterns 1,2
-    t3 = PhyloTree(""" ((d,c)b)a ; """, format=8, quoted_node_names=False)
-
-    # should match patterns 1,2
-    t4 = PhyloTree(""" ((c,d),(e,f)b)a ; """, format=8, quoted_node_names=False)
-
-    # should match pattern 1,2
-    t5 = PhyloTree(""" (((e,f)dum,(c,d)dee)b)a ; """, format=8, quoted_node_names=False)
-
-    # should match only 1
-    # does not match pattern 2 since (c,g) does not match (c,d)
-    t6 = PhyloTree(""" (((e,f),(c,g)b)b)a ; """, format=8, quoted_node_names=False)
-
-    # should match 1,2,3
-    t7 = PhyloTree(""" (((e,f,g)d,(e,f,i)c)b)a ; """, format=8, quoted_node_names=False)
-
-    # should match 1,2,3
-    t8 = PhyloTree(""" (((e,f,i)d,(e,f,g)c)b)a ; """, format=8, quoted_node_names=False)
-
-    # should match 1,2 not 3
-    t9 = PhyloTree(""" (((e,f,i)d,(e,f,j)c)b)a ; """, format=8, quoted_node_names=False)
-
-    # Should match 1,2,3
-    # does not match pattern4 because ('e','f','g') should come from sibling of b
-    t10 = PhyloTree(""" (b,((g,h,i)b,(e,f,g)c)d)a ; """, format=8, quoted_node_names=False)
-
-    # should match 1,3,4
-    # does not match pattern 2 because (c,c) does not match (c,d)
-    t11 = PhyloTree("""  ( ((e, f, g) c) b, ((g, (w)h, i)c) d) a ; """, format=8, quoted_node_names=False)
-
-    pattern1 = TreePattern(""" ((c)+)a ;""", quoted_node_names=False)
-    pattern2 = TreePattern(""" (('c','d')'+') 'a' ;""", quoted_node_names=True)
-    pattern3 = TreePattern(""" (('e','f','g')'+') 'a' ;""", quoted_node_names=True)
-    pattern4 = TreePattern(""" ((('g','h','i')+)'d',('e','f','g')'+') 'a' ;""", quoted_node_names=True)
-
-    pattern1_match = [3, 4, 5, 6, 7, 8, 9, 10, 11]
-    pattern2_match = [3, 4, 5, 7, 8, 9, 10]
-    pattern3_match = [7, 8, 10, 11]
-    pattern4_match = [11]
-    true_match = [pattern1_match, pattern2_match, pattern3_match, pattern4_match]
-
-    for p_num,pattern in enumerate([pattern1, pattern2, pattern3, pattern4]):
-        pattern_match = []
-        for tree_num, tree in enumerate([t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11]):
-            if list(pattern.find_match(tree, maxhits=None)):
-                pattern_match += [tree_num+1]
-        print(pattern_match == true_match[p_num])
+    print "compiled. run /test/test_metacharacters.py and /test/test_logical_comparison.py to test."
 
 
 if __name__ == '__main__':
