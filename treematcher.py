@@ -7,7 +7,7 @@ import ast
 import six
 import copy
 from ete3 import PhyloTree, Tree, NCBITaxa
-from symbols import SYMBOL
+from symbols import SYMBOL, SET
 
 # internal modules
 #...
@@ -279,7 +279,7 @@ class TreePattern(Tree):
             constraint_scope.update({"__target_node": node})
             constraint_scope.update({"__correct_node": correct_node})
             constraint = constraint.replace("@", "__target_node")
-            constraint = constraint.replace(SYMBOL["all_nodes"], "__correct_node")
+            constraint = constraint.replace(SET["all_nodes"], "__correct_node")
 
             try:
                 st = eval(constraint, constraint_scope)
@@ -350,11 +350,11 @@ class TreePattern(Tree):
             self.name = self.name.split(SYMBOL["is_leaf"])[0]
 
         # transform sets to the corresponding code
-        if SYMBOL["any_child"] in self.name:
-            self.name = " any( " + self.name.split("[")[0] + " " + ("[" + self.name.split("[")[1]).replace(SYMBOL["any_child"], "x") + " for x in __target_node.children)"
-        if SYMBOL["children"] in self.name:
-            self.name = " all( " + self.name.split("[")[0] + " " + ("[" + self.name.split("[")[1]).replace(SYMBOL["children"], "x") + " for x in __target_node.children)"
-        if SYMBOL["all_nodes"] in self.name:
+        if SET["any_child"] in self.name:
+            self.name = " any( " + self.name.split("[")[0] + " " + ("[" + self.name.split("[")[1]).replace(SET["any_child"], "x") + " for x in __target_node.children)"
+        if SET["children"] in self.name:
+            self.name = " all( " + self.name.split("[")[0] + " " + ("[" + self.name.split("[")[1]).replace(SET["children"], "x") + " for x in __target_node.children)"
+        if SET["all_nodes"] in self.name:
             controller["single_match"] = True
             controller["single_match_contstraint"] = self.name
             self.name = '@'
@@ -370,8 +370,8 @@ class TreePattern(Tree):
             controller["direct_connection_first"] = True
             controller["allow_indirect_connection"] = True
             controller["high"] = 1
-        elif '{' in self.name:
-            split = self.name.split('{')
+        elif SYMBOL["defined_number_set"] in self.name:
+            split = self.name.split(SYMBOL["defined_number_set"])
             self.name = split[0]
             bounds = self.decode_repeat_symbol(split[1])
             controller["low"] = bounds[0]

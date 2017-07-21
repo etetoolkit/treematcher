@@ -6,7 +6,12 @@ SYMBOL = {
 	'zero_or_more': '*',
 	'one_or_more': '+',
 	'zero_or_one': '?',
+	'defined_number_set': '{'
+}
+
+SET = {
 	'children': '[:children:]',
 	'any_child': '[:any_child:]',
 	'all_nodes': '[:all_nodes:]'
+
 }
