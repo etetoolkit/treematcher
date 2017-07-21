@@ -8,6 +8,71 @@ from treematcher import TreePattern
 # plus symbol acts "one_or_more" matches
 # trees from treematcher.py test function, except t6.
 
+class Test_basic_one_or_more_test(unittest.TestCase):
+    def test_one_or_mote_basic(self):
+        '''
+            The + represents one or more nodes.
+        '''
+
+        # should not match any pattern
+        t1 = PhyloTree(""" ((c,g)a) ; """, format=8, quoted_node_names=False)
+
+        # should not match any pattern
+        # does not match pattern 1 because there must be at least one node between a and (c,d)
+        t2 = PhyloTree(""" ((c,d)a) ; """, format=8, quoted_node_names=False)
+
+        # should match patterns 1,2
+        t3 = PhyloTree(""" ((d,c)b)a ; """, format=8, quoted_node_names=False)
+
+        # should match patterns 1,2
+        t4 = PhyloTree(""" ((c,d),(e,f)b)a ; """, format=8, quoted_node_names=False)
+
+        # should match pattern 1,2
+        t5 = PhyloTree(""" (((e,f)dum,(c,d)dee)b)a ; """, format=8, quoted_node_names=False)
+
+        # should match only 1
+        # does not match pattern 2 since (c,g) does not match (c,d)
+        t6 = PhyloTree(""" (((e,f),(c,g)b)b)a ; """, format=8, quoted_node_names=False)
+
+        # should match 1,2,3
+        t7 = PhyloTree(""" (((e,f,g)d,(e,f,i)c)b)a ; """, format=8, quoted_node_names=False)
+
+        # should match 1,2,3
+        t8 = PhyloTree(""" (((e,f,i)d,(e,f,g)c)b)a ; """, format=8, quoted_node_names=False)
+
+        # should match 1,2 not 3
+        t9 = PhyloTree(""" (((e,f,i)d,(e,f,j)c)b)a ; """, format=8, quoted_node_names=False)
+
+        # Should match 1,2,3
+        # does not match pattern4 because ('e','f','g') should come from sibling of b
+        t10 = PhyloTree(""" (b,((g,h,i)b,(e,f,g)c)d)a ; """, format=8, quoted_node_names=False)
+
+        # should match 1,3,4
+        # does not match pattern 2 because (c,c) does not match (c,d)
+        t11 = PhyloTree("""  ( ((e, f, g) c) b, ((g, (w)h, i)c) d) a ; """, format=8, quoted_node_names=False)
+
+        pattern1 = TreePattern(""" ((c)+)a ;""", quoted_node_names=False)
+        pattern2 = TreePattern(""" (('c','d')'+') 'a' ;""", quoted_node_names=True)
+        pattern3 = TreePattern(""" (('e','f','g')'+') 'a' ;""", quoted_node_names=True)
+        pattern4 = TreePattern(""" ((('g','h','i')+)'d',('e','f','g')'+') 'a' ;""", quoted_node_names=True)
+
+        pattern1_match = [3, 4, 5, 6, 7, 8, 9, 10, 11]
+        pattern2_match = [3, 4, 5, 7, 8, 9, 10]
+        pattern3_match = [7, 8, 10, 11]
+        pattern4_match = [11]
+        true_match = [pattern1_match, pattern2_match, pattern3_match, pattern4_match]
+
+        test_flag = True
+
+        for p_num,pattern in enumerate([pattern1, pattern2, pattern3, pattern4]):
+            pattern_match = []
+            for tree_num, tree in enumerate([t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11]):
+                if list(pattern.find_match(tree, maxhits=None)):
+                    pattern_match += [tree_num+1]
+            test_flag &= (pattern_match == true_match[p_num])
+
+        self.assertTrue(test_flag)
+
 class Test_one_or_more_functionality_test(unittest.TestCase):
     def setUp(self):
         self.t1 = PhyloTree(""" ((c,g)a) ; """, format=8, quoted_node_names=False)
@@ -330,6 +395,49 @@ class Test_zero_or_one_symbol(unittest.TestCase):
                     current_matches += [t_num + 1]
             matches += [current_matches]
         self.assertEqual(true_matches,  matches)
+
+class Test_node_name_parsing(unittest.TestCase):
+    def setUp(self):
+        self.t1 = PhyloTree(""" ((c,g)a) ; """, format=8, quoted_node_names=False)
+        self.t2 = PhyloTree(""" ((c,d)a) ; """, format=8, quoted_node_names=False)
+        self.t3 = PhyloTree(""" ((d,c)b)a ; """, format=8, quoted_node_names=False)
+        self.t4 = PhyloTree(""" ((c,d),(e,f)b)a ; """, format=8, quoted_node_names=False)
+        self.t5 = PhyloTree(""" (((e,f)dum,(c,d)dee)b)a ; """, format=8, quoted_node_names=False)
+        self.t6 = PhyloTree(""" (((e,f),(c,g)b)b)a ; """, format=8, quoted_node_names=False)
+        self.t7 = PhyloTree(""" (((e,f,g)d,(e,f,i)c)b)a ; """, format=8, quoted_node_names=False)
+        self.t8 = PhyloTree(""" (((e,f,i)d,(e,f,g)c)b)a ; """, format=8, quoted_node_names=False)
+        self.t9 = PhyloTree(""" (((e,f,i)d,(e,f,j)c)b)a ; """, format=8, quoted_node_names=False)
+        self.t10 = PhyloTree(""" (b,((g,h,i)b,(e,f,g)c)d)a ; """, format=8, quoted_node_names=False)
+        self.t11 = PhyloTree("""  ( ((e, f, g) c) b, ((g, h, i)c) d) a ; """, format=8, quoted_node_names=False)
+        self.t12 = PhyloTree("""  ((( ((e, f, g) c) b, (((g, h, i)c)n) d)k)m) a ; """, format=8, quoted_node_names=False)
+        self.t13 = PhyloTree(""" ((d,c)a)a ; """, format=8, quoted_node_names=False)
+
+        self.trees = [self.t1, self.t2, self.t3, self.t4, self.t5, self.t6, self.t7, self.t8, self.t9, self.t10, self.t11, self.t12, self.t13]
+
+
+    def test_multiple_constraints(self):
+        pt1 = TreePattern(""" ('c, @.dist == 1')'a, @.dist == 1' ; """, quoted_node_names=True)
+        pt2 = TreePattern(""" ('c, @.dist == 1')'a, @.dist == 0' ; """, quoted_node_names=True)
+        pt3 = TreePattern(""" ('c, @.dist == 1')'a' ; """, quoted_node_names=True)
+        pt4 = TreePattern(""" (('c, @.dist == 1')'+')'a, @.dist == 0' ; """, quoted_node_names=True)
+
+        pt1_match = [1, 2, 13]
+        pt2_match = []
+        pt3_match = [1, 2, 13]
+        pt4_match = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+
+        patterns = [pt1, pt2, pt3, pt4]
+        true_matches = [pt1_match, pt2_match, pt3_match, pt4_match]
+
+        matches = []
+        for num, pattern in enumerate(patterns):
+            current_matches = []
+            for t_num, tree in enumerate(self.trees):
+                if list(pattern.find_match(tree, maxhits=None)):
+                    current_matches += [t_num + 1]
+            matches += [current_matches]
+
+        self.assertTrue(true_matches == matches)
 
 if __name__ == '__main__':
     unittest.main()
