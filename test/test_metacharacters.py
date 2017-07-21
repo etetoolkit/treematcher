@@ -396,5 +396,48 @@ class Test_zero_or_one_symbol(unittest.TestCase):
             matches += [current_matches]
         self.assertEqual(true_matches,  matches)
 
+class Test_node_name_parsing(unittest.TestCase):
+    def setUp(self):
+        self.t1 = PhyloTree(""" ((c,g)a) ; """, format=8, quoted_node_names=False)
+        self.t2 = PhyloTree(""" ((c,d)a) ; """, format=8, quoted_node_names=False)
+        self.t3 = PhyloTree(""" ((d,c)b)a ; """, format=8, quoted_node_names=False)
+        self.t4 = PhyloTree(""" ((c,d),(e,f)b)a ; """, format=8, quoted_node_names=False)
+        self.t5 = PhyloTree(""" (((e,f)dum,(c,d)dee)b)a ; """, format=8, quoted_node_names=False)
+        self.t6 = PhyloTree(""" (((e,f),(c,g)b)b)a ; """, format=8, quoted_node_names=False)
+        self.t7 = PhyloTree(""" (((e,f,g)d,(e,f,i)c)b)a ; """, format=8, quoted_node_names=False)
+        self.t8 = PhyloTree(""" (((e,f,i)d,(e,f,g)c)b)a ; """, format=8, quoted_node_names=False)
+        self.t9 = PhyloTree(""" (((e,f,i)d,(e,f,j)c)b)a ; """, format=8, quoted_node_names=False)
+        self.t10 = PhyloTree(""" (b,((g,h,i)b,(e,f,g)c)d)a ; """, format=8, quoted_node_names=False)
+        self.t11 = PhyloTree("""  ( ((e, f, g) c) b, ((g, h, i)c) d) a ; """, format=8, quoted_node_names=False)
+        self.t12 = PhyloTree("""  ((( ((e, f, g) c) b, (((g, h, i)c)n) d)k)m) a ; """, format=8, quoted_node_names=False)
+        self.t13 = PhyloTree(""" ((d,c)a)a ; """, format=8, quoted_node_names=False)
+
+        self.trees = [self.t1, self.t2, self.t3, self.t4, self.t5, self.t6, self.t7, self.t8, self.t9, self.t10, self.t11, self.t12, self.t13]
+
+
+    def test_multiple_constraints(self):
+        pt1 = TreePattern(""" ('c, @.dist == 1')'a, @.dist == 1' ; """, quoted_node_names=True)
+        pt2 = TreePattern(""" ('c, @.dist == 1')'a, @.dist == 0' ; """, quoted_node_names=True)
+        pt3 = TreePattern(""" ('c, @.dist == 1')'a' ; """, quoted_node_names=True)
+        pt4 = TreePattern(""" (('c, @.dist == 1')'+')'a, @.dist == 0' ; """, quoted_node_names=True)
+
+        pt1_match = [1, 2, 13]
+        pt2_match = []
+        pt3_match = [1, 2, 13]
+        pt4_match = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+
+        patterns = [pt1, pt2, pt3, pt4]
+        true_matches = [pt1_match, pt2_match, pt3_match, pt4_match]
+
+        matches = []
+        for num, pattern in enumerate(patterns):
+            current_matches = []
+            for t_num, tree in enumerate(self.trees):
+                if list(pattern.find_match(tree, maxhits=None)):
+                    current_matches += [t_num + 1]
+            matches += [current_matches]
+
+        self.assertTrue(true_matches == matches)
+
 if __name__ == '__main__':
     unittest.main()
