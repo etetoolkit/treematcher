@@ -351,7 +351,24 @@ class TreePattern(Tree):
                 if len(self.name) > 0:
                     self.name = self.name[0:len(self.name)-1]
 
+        if len(self.name) < 1:
+            self.name = SYMBOL["node_reference"]
         return metacharacters
+
+    def parse_node_name(self):
+        """
+        transforms TreePattern.name attribute to a python expression.
+        Assumes expressions use commas to describe different attributes.
+        """
+        expressions = [ exp.strip() for exp in self.name.split(",") ]
+
+        for i in range(0, len(expressions)):
+            # len(expressions[i]) > 0 prevents @.name == "" case
+            if len(expressions[i]) > 0 and all(letter.isalpha() for letter in expressions[i]):
+                expressions[i] = '@.name == "' + expressions[i] + '"'
+
+        # prevents the " _expressions_ ... and  __empty_exp__ " case 
+        return " and ".join(exp for exp in expressions if len(exp) > 0)
 
 
     def set_controller(self):
@@ -403,6 +420,9 @@ class TreePattern(Tree):
                 controller["allow_indirect_connection"] = True
                 if controller["low"]  == 0: controller["direct_connection_first"] = True
                 else: controller["direct_connection_first"] = False
+
+        # transform node name to python expression
+        self.name = self.parse_node_name()
 
         # transform sets to the corresponding code
         if SET["any_child"] in self.name:
@@ -631,9 +651,9 @@ class TreePattern(Tree):
 
 
 def test():
-    print "compiled. run /test/test_metacharacters.py and /test/test_logical_comparison.py to test."
+    print "compiled.\nrun /test/test_metacharacters.py and /test/test_logical_comparison.py to test."
     t3 = PhyloTree(""" ((d,c)b)a ; """, format=8, quoted_node_names=False)
-    pattern1 = TreePattern(""" ((c)+)a ;""", quoted_node_names=False)
+    pattern1 = TreePattern(""" (('c, @.dist == 1')'+')'a, ^' ;""", quoted_node_names=True)
 
     print len(list(pattern1.find_match(t3))) > 0
 
