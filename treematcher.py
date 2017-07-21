@@ -367,7 +367,7 @@ class TreePattern(Tree):
             if len(expressions[i]) > 0 and all(letter.isalpha() for letter in expressions[i]):
                 expressions[i] = '@.name == "' + expressions[i] + '"'
 
-        # prevents the " _expressions_ ... and  __empty_exp__ " case 
+        # prevents the " _expressions_ ... and  __empty_exp__ " case
         return " and ".join(exp for exp in expressions if len(exp) > 0)
 
 

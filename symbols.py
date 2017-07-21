@@ -14,5 +14,4 @@ SET = {
 	'children': '[:children:]',
 	'any_child': '[:any_child:]',
 	'all_nodes': '[:all_nodes:]'
-
 }
