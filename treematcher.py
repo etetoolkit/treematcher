@@ -370,8 +370,8 @@ class TreePattern(Tree):
             controller["direct_connection_first"] = True
             controller["allow_indirect_connection"] = True
             controller["high"] = 1
-        elif SYMBOL["defined_number_set"] in self.name:
-            split = self.name.split(SYMBOL["defined_number_set"])
+        elif SYMBOL["defined_number_set_start"] in self.name:
+            split = self.name.split(SYMBOL["defined_number_set_start"])
             self.name = split[0]
             bounds = self.decode_repeat_symbol(split[1])
             controller["low"] = bounds[0]

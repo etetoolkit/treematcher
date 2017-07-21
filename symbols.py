@@ -6,7 +6,8 @@ SYMBOL = {
 	'zero_or_more': '*',
 	'one_or_more': '+',
 	'zero_or_one': '?',
-	'defined_number_set': '{'
+	'defined_number_set_start': '{',
+	'defined_number_set_end': '}'
 }
 
 SET = {
