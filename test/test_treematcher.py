@@ -27,16 +27,10 @@ class Test_strict_match(unittest.TestCase):
         matches = []
         for num, tree in enumerate(self.trees):
 
-            one_use = deepcopy(pattern)
-
-            result = one_use.find_match(tree)
-            try:
-                res = result.next()
-            except:
-                res = None
-
-            if res:
-                matches += [num + 1]
+            result = pattern.find_match(tree)
+            found = len(list(result)) > 0
+            if found:
+                matches += [num+1]
 
         self.assertTrue(matches == true_match)
 
@@ -46,15 +40,10 @@ class Test_strict_match(unittest.TestCase):
         true_match = [4, 5, 6, 7, 8, 9, 10, 11]
         matches = []
         for num, tree in enumerate(self.trees):
-            one_use = deepcopy(pattern)
 
-            result = one_use.find_match(tree)
-            try:
-                res = result.next()
-            except:
-                res = None
-
-            if res:
+            result = pattern.find_match(tree)
+            found = len(list(result)) > 0
+            if found:
                 matches += [num + 1]
 
         self.assertTrue(matches == true_match)
@@ -108,7 +97,7 @@ class Test_metacharacters_at_terminal_nodes(unittest.TestCase):
         result = (pattern.find_match(tree))
 
         #self.assertTrue(len(list(result)) > 0 )
-        self.assertEqual(result.next(), tree)
+        self.assertEqual(next(result), tree)
 
     def test_simple_zero_or_more(self):
         tree = Tree(" ((((a, a, b)), (c, d), (e, f)), (g, h, i)) ; ")
@@ -166,7 +155,7 @@ class Test_metacharacters_at_terminal_nodes(unittest.TestCase):
 
         pattern = TreePattern(""" ('@.dist == 0.2', 'b')'^', ('@.dist > 0.5', '@.dist == 0.7+')'^' ; """, quoted_node_names=True)
         result = pattern.find_match(tree)
-        res = result.next()
+        res = next(result)
         #self.assertEqual(res, ((tree&'f').up).up)
         self.assertTrue( len(list(result)) > 0 )
 
@@ -184,7 +173,7 @@ class Test_metacharacters_at_terminal_nodes(unittest.TestCase):
         pattern = TreePattern(""" ('g', '@.dist == 1+', 'fls_node*'); """, quoted_node_names=True)
         result = pattern.find_match(tree)
 
-        self.assertEqual(result.next(), (tree&'g').up)
+        self.assertEqual(next(result), (tree&'g').up)
 
     def test_exact_number_of_repeat(self):
         tree = Tree("((a, a, a, b, c), (d, d, qq), (e, e, e, ww, e, e, e, e, e)); ")
