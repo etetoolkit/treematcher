@@ -3,7 +3,7 @@ import itertools
 from collections import defaultdict, OrderedDict
 
 import six
-import copy
+from copy import deepcopy
 from ete3 import PhyloTree, Tree, NCBITaxa
 
 from symbols import SYMBOL, SET
@@ -303,8 +303,8 @@ class TreePattern(Tree):
 
     def find_match(self, t):
         return find_matches(t, self)
-        
-        
+
+
 
 # NEW APPROACH
 def compute_match_matrix(pattern, tree):
@@ -323,7 +323,7 @@ def children_match(tnode, pnode, c2nodes, loose_constraint=None):
     (pnode), handling min and max number of occurrences. pnode should not
     contain loose connections
     '''
-    
+
     # If no children expected in pattern node, return True, as local
     # conditions have already been checked
     if not pnode.children:
@@ -429,7 +429,7 @@ def split_by_loose_nodes(pattern):
 
 def find_matches(tree, pattern):
     '''Iterate over all possible matches of pattern in tree'''
-
+    pattern = deepcopy(pattern)
     for n in pattern.traverse():
         n.init_controller()
 
@@ -512,7 +512,7 @@ def expand_loose_connection_aliases(nw):
 #   3) The pattern topology is also used as a constraint. If no special symbols
 #   are used, a strict match of topology (parent-node relationships) is
 #   necessary to have a match
-# 
+#
 #   4) The symbol '+' at the end of a pattern node constraint expression
 #   indicates that ONE OR MORE nodes like the one specified can exist as SISTER
 #   nodes
@@ -540,7 +540,7 @@ def expand_loose_connection_aliases(nw):
 #  A1) finding matches of the strict pattern expressions (no looses connections contained).
 #
 #  A1.1) The original pattern is split into pieces (sub-patterns) that contain
-#  no loose connections. This is mostly done by the `split_by_loose_nodes()` function 
+#  no loose connections. This is mostly done by the `split_by_loose_nodes()` function
 #
 #  A1.2) Each sub-pattern is treated individually and used as input for A2.
 #
@@ -548,7 +548,7 @@ def expand_loose_connection_aliases(nw):
 #
 #   A2.1) Recursive search starting from the root node of the sub-pattern and
 #   descending through. Each pattern node is evaluated to check if their
-#   children combination exist in the target tree. 
+#   children combination exist in the target tree.
 #
 #   Which TREE nodes match each children PATTERN node.
 #   Fails if:
@@ -568,10 +568,10 @@ def test():
             print m, '*MATCH*'
         raw_input()
 
-    t1 = Tree("(((A, A2), (B,C)), K);") 
+    t1 = Tree("(((A, A2), (B,C)), K);")
     p1 = TreePattern("(((A, A2), (B,C)), K);")
     print_matches(t1, p1)
-        
+
     # ^ after a ) means that the two children of that node can be connected by
     # any number of internal up/down nodes
     t1 = Tree("(  ((B,Z), (D,F)), G);")
@@ -605,6 +605,6 @@ def test():
     t1 = Tree("(  (((B,H), (B,B,H), C), A), (K, J));")
     p1 = TreePattern("((C, (B+,H)+), A);")
     print_matches(t1, p1)
-    
+
 if __name__ == '__main__':
     test()
