@@ -1,6 +1,6 @@
 import unittest
 from ete3 import  Tree
-from treematcher import TreePattern, find_matches
+from ..treematcher import TreePattern
 from copy import deepcopy
 #class Test_strict_match():
 class Test_strict_match(unittest.TestCase):
