@@ -31,7 +31,7 @@ class Test_strict_match(unittest.TestCase):
 
             result = one_use.find_match(tree)
             try:
-                res = result.next()
+                res = next(result)
             except:
                 res = None
 
@@ -50,7 +50,7 @@ class Test_strict_match(unittest.TestCase):
 
             result = one_use.find_match(tree)
             try:
-                res = result.next()
+                res = next(result)
             except:
                 res = None
 
@@ -108,7 +108,7 @@ class Test_metacharacters_at_terminal_nodes(unittest.TestCase):
         result = (pattern.find_match(tree))
 
         #self.assertTrue(len(list(result)) > 0 )
-        self.assertEqual(result.next(), tree)
+        self.assertEqual(next(result), tree)
 
     def test_simple_zero_or_more(self):
         tree = Tree(" ((((a, a, b)), (c, d), (e, f)), (g, h, i)) ; ")
@@ -166,7 +166,7 @@ class Test_metacharacters_at_terminal_nodes(unittest.TestCase):
 
         pattern = TreePattern(""" ('@.dist == 0.2', 'b')'^', ('@.dist > 0.5', '@.dist == 0.7+')'^' ; """, quoted_node_names=True)
         result = pattern.find_match(tree)
-        res = result.next()
+        res = next(result)
         #self.assertEqual(res, ((tree&'f').up).up)
         self.assertTrue( len(list(result)) > 0 )
 
@@ -184,7 +184,7 @@ class Test_metacharacters_at_terminal_nodes(unittest.TestCase):
         pattern = TreePattern(""" ('g', '@.dist == 1+', 'fls_node*'); """, quoted_node_names=True)
         result = pattern.find_match(tree)
 
-        self.assertEqual(result.next(), (tree&'g').up)
+        self.assertEqual(next(result), (tree&'g').up)
 
     def test_exact_number_of_repeat(self):
         tree = Tree("((a, a, a, b, c), (d, d, qq), (e, e, e, ww, e, e, e, e, e)); ")
@@ -273,7 +273,7 @@ class Test_basic_tests(unittest.TestCase):
         t1 = Tree("(((A, A, A), (B,C)), K);")
         p1 = TreePattern("(((A, A+), (B,C)), K);")
         test &= len(list(p1.find_match(t1))) > 0
-        
+
 
         # ^ after a ) means that the two children of that node can be connected by
         # any number of internal up/down nodes

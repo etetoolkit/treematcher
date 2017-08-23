@@ -422,7 +422,7 @@ def split_by_loose_nodes(pattern):
 
     # Calculate expected groupings of the split partitions
     expected_groups = set()
-    for p, content in pnode2content.iteritems():
+    for p, content in six.iteritems(pnode2content):
         c = frozenset(content & to_visit)
         if len(c) > 1:
             expected_groups.add(c)
