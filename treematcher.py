@@ -1,3 +1,4 @@
+from __future__ import print_function
 import re
 import itertools
 from collections import defaultdict, OrderedDict
@@ -423,7 +424,7 @@ def split_by_loose_nodes(pattern):
 
     # Calculate expected groupings of the split partitions
     expected_groups = set()
-    for p, content in pnode2content.iteritems():
+    for p, content in pnode2content.items():
         c = frozenset(content & to_visit)
         if len(c) > 1:
             expected_groups.add(c)
@@ -564,12 +565,12 @@ def expand_loose_connection_aliases(nw):
 
 def test():
     def print_matches(t, p):
-        print '*'*60
-        print t, 'TARGET TREE'
-        print p.get_ascii(), 'PATTERN'
+        print('*'*60)
+        print(t.get_ascii(), 'TARGET TREE')
+        print(p.get_ascii(), 'PATTERN')
         for m in find_matches(t, p):
-            print m, '*MATCH*'
-        raw_input()
+            print( m.get_ascii(), '*MATCH*')
+        #input()
 
 
     t1 = Tree(" ((a, a, b)p1, ((c, c, c, d)p2, (e, f, g)p3)p4)p5 ;", format=1)
