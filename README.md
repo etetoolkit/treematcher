@@ -38,7 +38,7 @@ pattern2 = TreePattern(' (sample_1, sample_2)ancestor_a ; ', format=8)
 ```
 
 ### Quoted node names and the node symbol @
-[More about quoted_node_names](https://github.com/etetoolkit/treematcher/blame/master/sdoc/tutorial/tutorial_treematcher.rst#L59)
+[More about quoted_node_names](sdoc/tutorial/tutorial_treematcher.md#quoted-node-names-and-the-node-symbol-)
 
 In order to differentiate the parentheses of a function call from the parentheses defining Newick structure, quoted node names are used.
 That means simply that you enclose each node name in quotes.
@@ -61,7 +61,7 @@ pattern3 = TreePattern(""" ('sample_1', '@.is_leaf()')ancestor_a ; """, quoted_n
 ```
 
 ### Relax matches
-[More about relax matches](https://github.com/etetoolkit/treematcher/blame/master/sdoc/tutorial/tutorial_treematcher.rst#L101)
+[More about relax matches](sdoc/tutorial/tutorial_treematcher.md#relax_patterns)
 
 Treematcher allows to test against relax matched patterns.
 
@@ -108,8 +108,7 @@ print("The number of solutions are: ", len(solution))
 ```
 
 For more details on how to use treematcher read the tutorial.
-[Treematcher tutorial](https://github.com/etetoolkit/treematcher/blame/master/sdoc/tutorial/tutorial_treematcher.rst)
-
+[Treematcher tutorial](sdoc/tutorial/tutorial_treematcher.md)
 
 ### Advanced Topics
 
@@ -139,7 +138,7 @@ ete_search is the command line interface to treematcher. Using ete_search you ca
 pattern comparisons to multiple trees using files or text and retrieve some basic statistics and
 save results for later use.
 
-[Tutorial on command line tool](https://github.com/etetoolkit/treematcher/blame/master/sdoc/tutorial/tutorial_treematcher.rst#L195)
+[Tutorial on command line tool](sdoc/tutorial/tutorial_treematcher.rst#ete_search-command-line-tool)
 
 examples:
 Read patterns from a file called MyPatterns.txt and apply to each tree in MyTargetTrees.txt, output the results of each pattern in separate files called treematches0.txt, treematches1.txt, etc
