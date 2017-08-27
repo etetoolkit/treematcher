@@ -3,10 +3,14 @@
 import sys
 import logging
 import os.path
+
 from argparse import ArgumentParser
 from ete3.tools.common import src_tree_iterator
 from ete3.phylo import PhyloTree
+from ete3 import NodeStyle, TreeStyle
+
 from treematcher.treematcher import TreePattern
+
 
 class match_stats(object):
     def __init__(self, name=""):
@@ -141,36 +145,56 @@ def run(args):
 
             if args.render:
                 image = args.render
-                if pattern_length > 1:  # multiple patterns
-                    if match_length > 1:  # one file per match on each pattern
-                        for m, match in enumerate(matches):
-                            if '.' in image:
-                                image = image.replace('.', str(pattern_num) + '_' + str(m) + '.')
-                            else:
-                                image += str(pattern_num) + str(m)
-                            match.render(image)
-                    elif match_length == 1:  # One match on multiple patterns
+                if vars(args)["whole_tree"]:
+                    if pattern_length > 1:  # multiple patterns
                         if '.' in image:
                             image = image.replace('.', str(pattern_num) + '.')
                         else:
                             image += str(pattern_num)
-                        matches[0].render(image)
-                    else:
-                        if vars(args)["verbosity"] and vars(args)["verbosity"][0] > 1:
-                            print("No matches for pattern {} tree {}".format(pattern_num, n))
-                else:  # one pattern
-                    if match_length > 1:  # one file per match on one pattern
-                        for m, match in enumerate(matches):
+                    ts = TreeStyle()
+                    ts.show_leaf_name = True
+                    for n in t.traverse():
+                        nstyle = NodeStyle()
+                        if n in matches:
+                            nstyle["fgcolor"] = "green"
+                            nstyle["size"] = 7
+                        else:
+                            nstyle["fgcolor"] = "red"
+                            nstyle["size"] = 5
+                        n.set_style(nstyle)
+
+                    t.render(image, tree_style=ts, layout=lambda x: None)
+                else:
+                    if pattern_length > 1:  # multiple patterns
+                        if match_length > 1:  # one file per match on each pattern
+                            for m, match in enumerate(matches):
+                                if '.' in image:
+                                    image = image.replace('.', str(pattern_num) + '_' + str(m) + '.')
+                                else:
+                                    image += str(pattern_num) + str(m)
+                                match.render(image)
+                        elif match_length == 1:  # One match on multiple patterns
                             if '.' in image:
-                                image = image.replace('.', '_' + str(m) + '.')
+                                image = image.replace('.', str(pattern_num) + '.')
                             else:
-                                image += str(m)
-                            match.render(image)
-                    elif match_length == 1:  # one file for one match
-                        matches[0].render(image)
-                    else:
-                        if vars(args)["verbosity"] and vars(args)["verbosity"][0] > 1:
-                            print("No matches for tree {}".format(n))
+                                image += str(pattern_num)
+                            matches[0].render(image)
+                        else:
+                            if vars(args)["verbosity"] and vars(args)["verbosity"][0] > 1:
+                                print("No matches for pattern {} tree {}".format(pattern_num, n))
+                    else:  # one pattern
+                        if match_length > 1:  # one file per match on one pattern
+                            for m, match in enumerate(matches):
+                                if '.' in image:
+                                    image = image.replace('.', '_' + str(m) + '.')
+                                else:
+                                    image += str(m)
+                                match.render(image)
+                        elif match_length == 1:  # one file for one match
+                            matches[0].render(image)
+                        else:
+                            if vars(args)["verbosity"] and vars(args)["verbosity"][0] > 1:
+                                print("No matches for tree {}".format(n))
 
             if vars(args)["output"]:
                 if vars(args)["asciioutput"]:
