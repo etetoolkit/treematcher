@@ -22,7 +22,7 @@ class Test_strict_match(unittest.TestCase):
 
     def test_one_terminal_node(self):
         # The c node exists as leaf (not internal)
-        pattern = TreePattern(" (c)^; ")
+        pattern = TreePattern(" (c)~; ")
         true_match = [1, 2, 3, 4, 5, 6]
         matches = []
         for num, tree in enumerate(self.trees):
@@ -42,7 +42,7 @@ class Test_strict_match(unittest.TestCase):
 
     def test_two_terminal_nodes(self):
         # The presense of leaves e, f as sister nodes.
-        pattern = TreePattern(" (e, f)^; ")
+        pattern = TreePattern(" (e, f)~; ")
         true_match = [4, 5, 6, 7, 8, 9, 10, 11]
         matches = []
         for num, tree in enumerate(self.trees):
@@ -72,7 +72,7 @@ class Test_strict_match(unittest.TestCase):
         self.assertTrue(len(list(result)) == 0)
 
     def test_simple_complete_topology(self):
-        pattern = TreePattern("((e, i, f)d)^ ; ")
+        pattern = TreePattern("((e, i, f)d)~ ; ")
         true_match = [8, 9]
         match = []
 
@@ -95,7 +95,7 @@ class Test_strict_match(unittest.TestCase):
 class Test_metacharacters_at_terminal_nodes(unittest.TestCase):
     def test_simple_plus(self):
         tree = Tree(" (((a, a, b, qq), (a, b, c, ww)), (b, b, a, ee));", format=8)
-        pattern = TreePattern(" (qq, a+)^ ;")
+        pattern = TreePattern(" (qq, a+)~ ;")
 
         result = pattern.find_match(tree)
         expected = (tree&'qq').up
@@ -103,7 +103,7 @@ class Test_metacharacters_at_terminal_nodes(unittest.TestCase):
 
     def test_double_match(self):
         tree = Tree(" (((a, a, b), (c, c, d) ), (e, e, f), (g, h, i)) ; ")
-        pattern = TreePattern( " ((a+, b)^, (e+, f)^);")
+        pattern = TreePattern( " ((a+, b)~, (e+, f)~);")
 
         result = (pattern.find_match(tree))
 
@@ -164,7 +164,7 @@ class Test_metacharacters_at_terminal_nodes(unittest.TestCase):
         (tree&'f').dist = 0.7
         (tree&'g').dist = 0.9
 
-        pattern = TreePattern(""" ('@.dist == 0.2', 'b')'^', ('@.dist > 0.5', '@.dist == 0.7+')'^' ; """, quoted_node_names=True)
+        pattern = TreePattern(""" ('@.dist == 0.2', 'b')'~', ('@.dist > 0.5', '@.dist == 0.7+')'~' ; """, quoted_node_names=True)
         result = pattern.find_match(tree)
         res = next(result)
         #self.assertEqual(res, ((tree&'f').up).up)
@@ -275,20 +275,20 @@ class Test_basic_tests(unittest.TestCase):
         test &= len(list(p1.find_match(t1))) > 0
 
 
-        # ^ after a ) means that the two children of that node can be connected by
+        # ~ after a ) means that the two children of that node can be connected by
         # any number of internal up/down nodes
         t1 = Tree("(  ((B,Z), (D,F)), G);")
-        p1 = TreePattern("( (B,Z), G)^;")
+        p1 = TreePattern("( (B,Z), G)~;")
         test &= len(list(p1.find_match(t1))) > 0
 
 
         t1 = Tree("(  ((G, ((B,Z),A)), (D,G)), C);")
-        p1 = TreePattern("(((B,Z)^,C), G)^;")
+        p1 = TreePattern("(((B,Z)~,C), G)~;")
         test &= len(list(p1.find_match(t1))) == 0
 
 
         t1 = Tree("(  ((G, ((B,Z),A)), (D,G)), C);")
-        p1 = TreePattern("(((B,Z)^,G), C)^;")
+        p1 = TreePattern("(((B,Z)~,G), C)~;")
         test &= len(list(p1.find_match(t1))) > 0
 
 

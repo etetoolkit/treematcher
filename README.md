@@ -65,16 +65,16 @@ pattern3 = TreePattern(""" ('sample_1', '@.is_leaf()')ancestor_a ; """, quoted_n
 
 Treematcher allows to test against relax matched patterns.
 
-By setting ` ^ ` as ancestor you enable the loose connection ability.
-Loose connection means that the ` ^ ` children may connect
+By setting ` ~ ` as ancestor you enable the loose connection ability.
+Loose connection means that the ` ~ ` children may connect
 loosely via any number of intermediate nodes.
 
 ```
 # example 5: test if tips A, B, C exists in the same tree
-pattern5 = TreePattern(" (A, B, C)^ ;")
+pattern5 = TreePattern(" (A, B, C)~ ;")
 
 #example 6: test if (A, B) and (C, D) are conected via any number of nodes
-pattern6 = TreePattern(" ((A,B)^), ((C,D)^) ;")
+pattern6 = TreePattern(" ((A,B)~), ((C,D)~) ;")
 
 ```
 
@@ -85,7 +85,7 @@ They borrow their meaning from regular expressions.
 
 ```
 #example 7: zero or more ocuurances of a node
-TreePattern( " ('A', '@.dist > 0.5*')'^' ;", quoted_node_names=True)
+TreePattern( " ('A', '@.dist > 0.5*')'~' ;", quoted_node_names=True)
 
 #example 8: exact number
 TreePattern(" ('A', '@.dist > 0,5{2, 5}') ;", quoted_node_names=True)

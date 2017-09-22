@@ -218,7 +218,7 @@ class TreePattern(Tree):
             self.min_occur = 1
             self.max_occur = 1
 
-        if raw_constraint.startswith('^') and self.children:
+        if raw_constraint.startswith('~') and self.children:
             self.loose_children = True
             raw_constraint = raw_constraint[1:]
         else:
@@ -487,7 +487,7 @@ def expand_loose_connection_aliases(nw):
     chunks = []
     i = 0
     while True:
-        next_split = nw[i:].find('^')
+        next_split = nw[i:].find('~')
         if next_split == -1:
             chunks.append(nw[i:])
             break
@@ -498,7 +498,7 @@ def expand_loose_connection_aliases(nw):
         i += next_split + 1
         ipoint = find_first_unmatched_closing_par(nw[i:])
         chunks.append(nw[i:i+ipoint+1])
-        chunks.append('^')
+        chunks.append('~')
         i += ipoint + 1
 
     return ''.join(chunks)
@@ -533,7 +533,7 @@ def expand_loose_connection_aliases(nw):
 #
 #   8) To express that two terminal or internal nodes can be linked by an
 #   arbitrary number of connections (so called a LOOSE CONNECTION), the symbol
-#   '^' should be added to their parent nodes
+#   '~' should be added to their parent nodes
 #
 # How the matching algorithm works:
 #
